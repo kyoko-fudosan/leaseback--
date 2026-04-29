@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リースバック投資シミュレーター</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#040d1a;font-family:'Segoe UI',sans-serif;color:#e8f4fd;min-height:100vh}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+
+  .header{background:linear-gradient(90deg,#001a2e,#002a44);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #0a3050}
+  .logo{width:36px;height:36px;background:linear-gradient(135deg,#00d4aa,#0088cc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .header-title{font-size:15px;font-weight:800;font-family:monospace}
+  .header-sub{font-size:11px;color:#00d4aa;letter-spacing:.08em}
+
+  .verdict{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom-width:2px;border-bottom-style:solid}
+  .verdict-main{font-size:22px;font-weight:900;font-family:monospace}
+  .verdict-sub{font-size:11px;color:#8a9bb0}
+  .verdict-label{font-size:11px;letter-spacing:.08em;margin-bottom:2px}
+  .verdict-right{text-align:right}
+  .verdict-by{font-size:11px;color:#8a9bb0;margin-bottom:3px}
+  .verdict-years{font-size:20px;font-weight:800;font-family:monospace}
+
+  .tabs{display:flex;gap:6px;padding:10px 16px 0}
+  .tab-btn{flex:1;padding:11px 4px;border:none;cursor:pointer;font-weight:700;font-size:14px;font-family:monospace;border-radius:8px;transition:all .15s}
+
+  .content{padding:12px 16px 60px}
+  .section-label{font-size:12px;letter-spacing:.12em;font-family:monospace;margin-bottom:10px;margin-top:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+
+  .num-card{background:rgba(255,255,255,.05);border:1px solid #1e2d3d;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:4px;min-width:0}
+  .num-card span.lbl{font-size:13px;color:#7a8fa8;flex-shrink:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .num-card input{width:52px;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid #2a3d50;border-radius:4px;outline:none;color:#e8f4fd;font-family:monospace;font-size:15px;font-weight:800;padding:4px 5px;text-align:right;margin-left:auto}
+  .num-card span.unit{font-size:12px;color:#00d4aa;font-weight:600;flex-shrink:0}
+
+  .auto-card{background:rgba(0,212,170,.08);border:1px solid #00d4aa33;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center}
+  .auto-card .lbl2{font-size:12px;color:#7a8fa8;margin-bottom:4px}
+  .auto-card .val2{font-size:17px;font-weight:800;color:#00d4aa;font-family:monospace}
+
+  .pet-card{background:rgba(255,136,68,.1);border:1px solid #ff884433;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center}
+  .pet-card .lbl2{font-size:12px;color:#ff8844;margin-bottom:4px}
+  .pet-card .val2{font-size:20px;font-weight:800;color:#ff8844;font-family:monospace}
+  .pet-card .sub2{font-size:11px;color:#aa6633}
+
+  .ltv-info{font-size:12px;color:#556677;padding:3px 0 8px;font-family:monospace}
+
+  .toggle-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #0a1828;gap:8px;margin-bottom:10px}
+  .toggle-row .lbl{font-size:14px;color:#8a9bb0;flex-shrink:0}
+  .toggle-row .spacer{flex:1}
+  .toggle-btn{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700}
+
+  .early-box{background:rgba(255,100,68,.06);border:1px solid #ff664433;border-radius:8px;padding:12px}
+  .early-title{font-size:12px;color:#ff8866;font-family:monospace;margin-bottom:10px}
+  .early-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1a1a2a;font-size:13px}
+  .early-total{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:2px solid #ff664455}
+  .early-total-lbl{font-size:14px;font-weight:700;color:#ff9977}
+
+  .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;margin-top:10px}
+  .metric-card{border-radius:10px;padding:12px;text-align:center}
+  .metric-card .m-lbl{font-size:12px;color:#8a9bb0;margin-bottom:4px}
+  .metric-card .m-val{font-size:18px;font-weight:800;font-family:monospace}
+
+  .cf-card{background:rgba(255,255,255,.04);border:1px solid #1e2d3d;border-radius:10px;padding:14px;margin-bottom:10px}
+  .cf-title{font-size:12px;color:#00d4aa;font-family:monospace;margin-bottom:12px}
+  .cf-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #0a1520}
+  .cf-row-last{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+  .cf-lbl{font-size:15px;color:#8a9bb0}
+  .cf-val{font-size:15px;font-weight:700;font-family:monospace}
+  .cf-total{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid #1e3050}
+  .cf-total-lbl{font-size:15px;font-weight:700}
+  .cf-total-val{font-size:22px;font-weight:900;font-family:monospace}
+
+  .risk-card{background:rgba(255,255,255,.04);border:1px solid #1e2d3d;border-radius:10px;padding:14px;margin-bottom:10px}
+  .risk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .risk-label{font-size:15px;font-weight:700}
+  .risk-detail{font-size:14px;color:#8a9bb0;line-height:1.6}
+  .badge{font-size:14px;font-weight:600;padding:4px 11px;border-radius:20px}
+
+  .note{padding:12px;background:rgba(255,255,255,.02);border-radius:8px;font-size:12px;color:#445566;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">🏠</div>
+  <div>
+    <div class="header-title">LEASEBACK ANALYZER</div>
+    <div class="header-sub">リースバック投資シミュレーター</div>
+  </div>
+</div>
+
+<div class="verdict" id="verdict"></div>
+
+<div class="tabs">
+  <button class="tab-btn" id="tab-input" onclick="setTab('input')">📋 入力</button>
+  <button class="tab-btn" id="tab-breakeven" onclick="setTab('breakeven')">📊 損益分岐</button>
+  <button class="tab-btn" id="tab-risk" onclick="setTab('risk')">⚠️ リスク</button>
+</div>
+
+<div class="content">
+  <div id="pane-input"></div>
+  <div id="pane-breakeven" style="display:none"></div>
+  <div id="pane-risk" style="display:none"></div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const state = {
+  purchasePrice: 2500, monthlyRent: 18, renovationCost: 800,
+  fireInsurance: 5, propertyTax: 10, acquisitionCost: 80,
+  equity: 0, loanRate: 2.5, loanTerm: 15,
+  landTsubo: 58.7, pricePerTsubo: 20, demolishCost: 200,
+  catCount: 15, earlyYears: 5, exitMode: 'reform',
+  majorReformCost: 1000, calcPeriod: 20, tab: 'input'
+};
+
+// ── Calc ───────────────────────────────────────────────
+function calc() {
+  const s = state;
+  const pw = s.purchasePrice * 10000;
+  const loan = Math.max(0, pw - s.equity * 10000);
+  const mr = s.loanRate / 100 / 12;
+  const tp = s.loanTerm * 12;
+  const monthlyLoan = mr === 0 ? (tp > 0 ? loan / tp : 0) : loan * (mr * Math.pow(1+mr,tp)) / (Math.pow(1+mr,tp)-1);
+  const totalInterest = monthlyLoan * tp - loan;
+  const annualRent = s.monthlyRent * 10000 * 12;
+  const acqW = s.acquisitionCost;
+  const fixedW = s.fireInsurance + s.propertyTax;
+  const reno = s.renovationCost * 10000;
+  const catFactor = s.catCount > 10 ? 1.5 : s.catCount > 5 ? 1.2 : 1.0;
+  const renoAdj = reno * catFactor;
+  const exitLand = Math.round(s.landTsubo * s.pricePerTsubo);
+  const exitVal = exitLand * 10000;
+  const surfYield = pw > 0 ? (annualRent / pw) * 100 : 0;
+  const netYield = pw > 0 ? (annualRent - fixedW * 10000) / pw * 100 : 0;
+
+  let breakevenYears = null;
+  for (let y = 1; y <= 50; y++) {
+    const r = annualRent * y;
+    const f = fixedW * 10000 * y + acqW * 10000;
+    const i = totalInterest * Math.min(1, y / s.loanTerm);
+    if ((r + exitVal) - (pw + f + renoAdj + i) >= 0) { breakevenYears = y; break; }
+  }
+
+  const lp = s.calcPeriod;
+  const totalRent = annualRent * lp;
+  const totalFixed = fixedW * 10000 * lp + acqW * 10000;
+  const interest = totalInterest * Math.min(1, lp / s.loanTerm);
+  const net = (totalRent + exitVal) - (pw + totalFixed + renoAdj + interest);
+
+  const ey = s.earlyYears;
+  const earlyRent = annualRent * ey;
+  const earlyFixed = fixedW * 10000 * ey + acqW * 10000;
+  const earlyInterest = totalInterest * Math.min(1, ey / s.loanTerm);
+  const earlyReformCost = s.exitMode === 'reform' ? s.majorReformCost * 10000 * catFactor : 0;
+  const earlyDemolishCost = s.exitMode === 'demolish' ? s.demolishCost * 10000 : 0;
+  const earlyLandVal = exitLand * 10000;
+  const earlyExitVal = s.exitMode === 'demolish' ? earlyLandVal - earlyDemolishCost : earlyLandVal;
+  const earlyNet = (earlyRent + earlyExitVal) - (pw + earlyFixed + earlyReformCost + earlyDemolishCost + earlyInterest);
+
+  return { pw, loan, monthlyLoan, totalInterest, totalRent, totalFixed, renoAdj, catFactor, interest, exitVal, net, surfYield, netYield, breakevenYears, earlyRent, earlyFixed, earlyInterest, earlyExitVal, earlyNet, earlyReformCost, earlyDemolishCost, earlyLandVal, acqW, fixedW, exitLand };
+}
+
+// ── Helpers ────────────────────────────────────────────
+const wan = v => `${Math.round(Math.abs(v)/10000).toLocaleString()}万`;
+const pct = v => `${v.toFixed(1)}%`;
+const c2 = v => v.toLocaleString();
+
+function numCard(label, key, unit, step, min, max) {
+  return `<div class="num-card">
+    <span class="lbl">${label}</span>
+    <input type="number" value="${state[key]}" step="${step}" min="${min}" max="${max}"
+      onchange="update('${key}',this.value)"
+      onblur="clamp('${key}',${min},${max},this)"
+      onkeydown="if(event.key==='Enter')this.blur()">
+    <span class="unit">${unit}</span>
+  </div>`;
+}
+
+function update(key, val) {
+  const n = parseFloat(val);
+  if (!isNaN(n)) { state[key] = n; render(); }
+}
+
+function clamp(key, min, max, el) {
+  let n = parseFloat(el.value);
+  if (isNaN(n)) n = state[key];
+  n = Math.max(min, Math.min(max, n));
+  state[key] = n; el.value = n; render();
+}
+
+function setExitMode(m) { state.exitMode = m; render(); }
+function setTab(t) { state.tab = t; render(); }
+
+function badge(ok, warn) {
+  const bg = ok ? '#003322' : warn ? '#332200' : '#330011';
+  const col = ok ? '#00d4aa' : warn ? '#ffaa00' : '#ff4466';
+  const bdr = ok ? '#00d4aa44' : warn ? '#ffaa0044' : '#ff446644';
+  const txt = ok ? '低リスク' : warn ? '要注意' : '高リスク';
+  return `<span class="badge" style="background:${bg};color:${col};border:1px solid ${bdr}">${txt}</span>`;
+}
+
+// ── Render ─────────────────────────────────────────────
+function render() {
+  const c = calc();
+  const s = state;
+  const profit = c.net >= 0;
+
+  // Verdict
+  const vbg = profit ? 'linear-gradient(90deg,#003322,#004433)' : 'linear-gradient(90deg,#2a0011,#3a0022)';
+  const vbdr = profit ? '#00d4aa' : '#ff4466';
+  const vlabel = profit ? '▲ 収益見込みあり' : '▼ 収益リスク高';
+  const vlabelCol = profit ? '#00d4aa' : '#ff4466';
+  document.getElementById('verdict').style.cssText = `background:${vbg};border-bottom:2px solid ${vbdr};padding:13px 16px;display:flex;justify-content:space-between;align-items:center`;
+  document.getElementById('verdict').innerHTML = `
+    <div>
+      <div style="font-size:11px;color:${vlabelCol};letter-spacing:.08em;margin-bottom:2px">${vlabel}</div>
+      <div style="font-size:22px;font-weight:900;font-family:monospace">${profit?'+':'-'}${wan(c.net)}円</div>
+      <div style="font-size:11px;color:#8a9bb0">${s.calcPeriod}年居住した場合の総収支</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:#8a9bb0;margin-bottom:3px">何年住めばプラス？</div>
+      <div style="font-size:20px;font-weight:800;font-family:monospace;color:${c.breakevenYears?'#ffd700':'#ff4466'}">${c.breakevenYears?c.breakevenYears+'年以上':'50年超'}</div>
+    </div>`;
+
+  // Tabs
+  ['input','breakeven','risk'].forEach(t => {
+    const btn = document.getElementById('tab-'+t);
+    btn.style.background = s.tab === t ? '#00d4aa' : 'transparent';
+    btn.style.color = s.tab === t ? '#040d1a' : '#8a9bb0';
+    document.getElementById('pane-'+t).style.display = s.tab === t ? '' : 'none';
+  });
+
+  // ── INPUT PANE ──
+  const ltv = s.purchasePrice > 0 ? Math.round(Math.max(0, s.purchasePrice - s.equity) / s.purchasePrice * 100) : 0;
+  const loanAmt = Math.round(Math.max(0, s.purchasePrice - s.equity));
+  const petStatus = s.catCount > 10 ? '多頭・要注意' : s.catCount > 5 ? '複数・注意' : s.catCount > 0 ? '飼育あり' : '飼育なし';
+  const earlyRows = [
+    ['＋ 家賃収入（'+s.earlyYears+'年）', c.earlyRent, true],
+    ['＋ 売却収入（土地値）', c.earlyLandVal, true],
+    ['－ 購入費用', -c.pw, false],
+    ['－ 不動産取得費', -c.acqW*10000, false],
+    ['－ 固定費（'+s.earlyYears+'年）', -(c.fixedW*10000*s.earlyYears), false],
+    ['－ 融資利息（'+s.earlyYears+'年）', -c.earlyInterest, false],
+    s.exitMode==='reform'
+      ? ['－ 大規模リフォーム（ペット×'+c.catFactor+'）', -c.earlyReformCost, false]
+      : ['－ 解体費用', -c.earlyDemolishCost, false],
+  ].map(([lbl,val,pos]) => `
+    <div class="early-row">
+      <span style="color:#8a9bb0">${lbl}</span>
+      <span style="font-family:monospace;font-weight:700;color:${pos?'#00d4aa':'#ff6688'}">${pos?'+':''}${Math.round(val/10000).toLocaleString()}万</span>
+    </div>`).join('');
+
+  document.getElementById('pane-input').innerHTML = `
+    <div class="section-label" style="color:#00d4aa">▌ 物件・収益</div>
+    <div class="grid">
+      ${numCard('購入価格','purchasePrice','万円',50,100,50000)}
+      ${numCard('月額家賃','monthlyRent','万円/月',1,1,200)}
+    </div>
+    <div class="section-label" style="color:#00d4aa">▌ 融資条件</div>
+    <div class="grid">
+      ${numCard('自己資金','equity','万円',50,0,50000)}
+      ${numCard('金利','loanRate','%',0.1,0,20)}
+      ${numCard('返済期間','loanTerm','年',1,1,50)}
+    </div>
+    <div class="ltv-info">融資額 ${c2(loanAmt)}万円 / LTV ${ltv}%</div>
+    <div class="section-label" style="color:#00d4aa">▌ コスト</div>
+    <div class="grid">
+      ${numCard('固定資産税','propertyTax','万円/年',1,0,200)}
+      ${numCard('火災保険料','fireInsurance','万円/年',1,0,100)}
+      ${numCard('不動産取得費','acquisitionCost','万円',10,0,1000)}
+      ${numCard('退去後リフォーム','renovationCost','万円',50,0,10000)}
+    </div>
+    <div class="section-label" style="color:#00d4aa">▌ 出口（土地）</div>
+    <div class="grid">
+      ${numCard('土地面積','landTsubo','坪',0.1,0,1000)}
+      ${numCard('坪単価','pricePerTsubo','万円/坪',1,0,500)}
+      ${numCard('解体費用','demolishCost','万円',10,0,2000)}
+      <div class="auto-card">
+        <div class="lbl2">土地値（自動）</div>
+        <div class="val2">${c2(c.exitLand)}万</div>
+      </div>
+    </div>
+    <div class="section-label" style="color:#ff8844">▌ 🐾 ペット・入居条件</div>
+    <div class="grid">
+      ${numCard('ペット頭数','catCount','頭',1,0,100)}
+      <div class="pet-card">
+        <div class="lbl2">リフォーム倍率</div>
+        <div class="val2">×${c.catFactor.toFixed(1)}</div>
+        <div class="sub2">${petStatus}</div>
+      </div>
+    </div>
+    <div class="section-label" style="color:#ff6644">▌ 🚨 短期解約シナリオ</div>
+    <div class="grid">
+      ${numCard('早期退去想定','earlyYears','年後',1,1,30)}
+      ${s.exitMode==='reform' ? numCard('大規模リフォーム費','majorReformCost','万円',50,0,5000) : '<div></div>'}
+    </div>
+    <div class="toggle-row">
+      <span class="lbl">退去後の対応</span>
+      <div class="spacer"></div>
+      <div style="display:flex;gap:6px">
+        <button class="toggle-btn" onclick="setExitMode('reform')" style="background:${s.exitMode==='reform'?'#ff6644':'rgba(255,255,255,.07)'};color:${s.exitMode==='reform'?'#fff':'#8a9bb0'}">大規模リフォーム</button>
+        <button class="toggle-btn" onclick="setExitMode('demolish')" style="background:${s.exitMode==='demolish'?'#ff6644':'rgba(255,255,255,.07)'};color:${s.exitMode==='demolish'?'#fff':'#8a9bb0'}">解体売却</button>
+      </div>
+    </div>
+    <div class="early-box">
+      <div class="early-title">📊 ${s.earlyYears}年後早期退去 内訳</div>
+      ${earlyRows}
+      <div class="early-total">
+        <span class="early-total-lbl">収支合計</span>
+        <span style="font-family:monospace;font-weight:900;font-size:17px;color:${c.earlyNet>=0?'#00d4aa':'#ff4466'}">${c.earlyNet>=0?'+':''}${Math.round(c.earlyNet/10000).toLocaleString()}万円</span>
+      </div>
+    </div>`;
+
+  // ── BREAKEVEN PANE ──
+  const metrics = [
+    {lbl:'表面利回り', val:pct(c.surfYield), ok:c.surfYield>=8, warn:c.surfYield<5},
+    {lbl:'実質利回り', val:pct(c.netYield), ok:c.netYield>=6, warn:c.netYield<4},
+    {lbl:'月額ローン', val:Math.round(c.monthlyLoan/10000)+'万円'},
+    {lbl:'自己資金', val:Math.round((c.pw-c.loan)/10000)+'万円'},
+  ].map(m => {
+    const bg = m.ok ? '#003322' : m.warn ? '#330011' : 'rgba(255,255,255,.04)';
+    const bdr = m.ok ? '#00d4aa44' : m.warn ? '#ff446644' : '#1e2d3d';
+    const col = m.ok ? '#00d4aa' : m.warn ? '#ff4466' : '#e8f4fd';
+    return `<div class="metric-card" style="background:${bg};border:1px solid ${bdr}">
+      <div class="m-lbl">${m.lbl}</div>
+      <div class="m-val" style="color:${col}">${m.val}</div>
+    </div>`;
+  }).join('');
+
+  const cfRows = [
+    ['家賃収入合計', c.totalRent, true],
+    ['売却収入（土地値）', c.exitVal, true],
+    ['購入費用', -c.pw, false],
+    ['固定費合計（'+s.calcPeriod+'年）', -c.totalFixed, false],
+    ['退去後リフォーム（ペット×'+c.catFactor+'）', -c.renoAdj, false],
+    ['融資利息（'+s.calcPeriod+'年中）', -c.interest, false],
+  ].map(([ lbl, val, pos], i, arr) => `
+    <div class="${i<arr.length-1?'cf-row':'cf-row-last'}">
+      <span class="cf-lbl">${lbl}</span>
+      <span class="cf-val" style="color:${pos?'#00d4aa':'#ff6688'}">${pos?'+':''}${wan(val)}円</span>
+    </div>`).join('');
+
+  document.getElementById('pane-breakeven').innerHTML = `
+    <div class="section-label" style="color:#00d4aa">▌ 条件を変えてシミュレーション</div>
+    <div class="grid">
+      ${numCard('購入価格','purchasePrice','万円',50,100,50000)}
+      ${numCard('月額家賃','monthlyRent','万円/月',1,1,200)}
+      ${numCard('自己資金','equity','万円',50,0,50000)}
+      ${numCard('居住年数','calcPeriod','年',1,1,50)}
+      ${numCard('金利','loanRate','%',0.1,0,20)}
+      ${numCard('返済期間','loanTerm','年',1,1,50)}
+    </div>
+    <div class="metric-grid">${metrics}</div>
+    <div class="cf-card">
+      <div class="cf-title">▌ キャッシュフロー内訳（${s.calcPeriod}年）</div>
+      ${cfRows}
+      <div class="cf-total">
+        <span class="cf-total-lbl">総収支</span>
+        <span class="cf-total-val" style="color:${profit?'#00d4aa':'#ff4466'}">${profit?'+':'-'}${wan(c.net)}円</span>
+      </div>
+    </div>`;
+
+  // ── RISK PANE ──
+  const risks = [
+    {lbl:'🐾 ペットダメージ', ok:s.catCount<=5, warn:s.catCount>5&&s.catCount<=10, detail: s.catCount>10?`${s.catCount}頭・リフォーム×1.5倍（多頭飼育）`:s.catCount>5?`${s.catCount}頭・×1.2倍`:s.catCount>0?`${s.catCount}頭・×1.0（標準）`:'飼育なし・補正なし'},
+    {lbl:'📈 利回り', ok:c.surfYield>=8, warn:c.surfYield>=6&&c.surfYield<8, detail:`表面${pct(c.surfYield)} / 実質${pct(c.netYield)}`},
+    {lbl:'🏁 出口（売却）', ok:c.exitVal>=c.pw*0.5, warn:c.exitVal>0&&c.exitVal<c.pw*0.5, detail:c.exitVal<=0?'土地値＜解体費：追加費用発生':`売却収入 ${wan(c.exitVal)}円（購入額の${Math.round(c.exitVal/c.pw*100)}%）`},
+    {lbl:'🏦 融資コスト', ok:s.loanRate<2.5, warn:s.loanRate>=2.5&&s.loanRate<3.5, detail:`金利${s.loanRate}% / 総利息${wan(c.totalInterest)}円`},
+    {lbl:'💰 損益分岐年数', ok:!!c.breakevenYears&&c.breakevenYears<=15, warn:!!c.breakevenYears&&c.breakevenYears>15, detail:c.breakevenYears?`${c.breakevenYears}年以上住み続けると収支がプラスに転換。`:'50年以内に損益分岐しない。購入価格の見直しを推奨。'},
+    {lbl:'🚨 短期解約リスク', ok:c.earlyNet>=0, warn:c.earlyNet<0&&c.earlyNet>=-c.pw*0.2, detail:`${s.earlyYears}年で早期退去・${s.exitMode==='reform'?`大規模リフォーム${s.majorReformCost}万（ペット×${c.catFactor}）後売却`:`解体${s.demolishCost}万後土地売却`}の場合：${c.earlyNet>=0?'+':''}${Math.round(c.earlyNet/10000).toLocaleString()}万円`},
+    {lbl:'🔨 退去後コスト', ok:false, warn:s.exitMode==='reform', detail:s.exitMode==='reform'?`大規模リフォーム（ペット補正込）${Math.round(s.majorReformCost*c.catFactor).toLocaleString()}万円。リフォーム後の賃貸・売却が前提。`:`解体費用${s.demolishCost}万円。解体後土地売却。`},
+  ].map(r => `
+    <div class="risk-card">
+      <div class="risk-header">
+        <span class="risk-label">${r.lbl}</span>
+        ${badge(r.ok, r.warn)}
+      </div>
+      <div class="risk-detail">${r.detail}</div>
+    </div>`).join('');
+
+  document.getElementById('pane-risk').innerHTML = `
+    <div class="section-label" style="color:#00d4aa;margin-top:12px">▌ リスク判定</div>
+    ${risks}
+    <div class="note">※ 参考用シミュレーターです。実際の投資判断は不動産・税務の専門家にご相談ください。</div>`;
+}
+
+render();
+</script>
+</body>
+</html>
